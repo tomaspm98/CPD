@@ -86,10 +86,10 @@ public class Main {
                 results.add((stop - start) / 1000000000);
             }
             StringBuilder sb = new StringBuilder();
-            //sb.append("mult_");
-            //sb.append(size);
-            //sb.append(".csv");
-            Main.printToCSV(results, "fdfofn.csv");
+            sb.append("../doc/execution_data/mult/java_mult_result_");
+            sb.append(size);
+            sb.append(".csv");
+            Main.printToCSV(results, sb.toString());
             sb.setLength(0);
             sb.append("Finished mult ");
             sb.append(size);
