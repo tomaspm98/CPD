@@ -8,18 +8,21 @@ public class User {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
+    private String username;
+    private int level;
     private static final UserDatabase userDatabase = new UserDatabase();
 
     public User(Socket socket) throws IOException {
         this.socket = socket;
         this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.username = in.readLine();
+        this.level = userDatabase.getLevel(username);
     }
 
     public boolean authenticate() {
         try {
             
-            String username = in.readLine();
             String password = in.readLine();
             
             
@@ -47,6 +50,19 @@ public class User {
             System.err.println("Error reading user credentials: " + e.getMessage());
             return false;
         }
+    }
+
+    public String getUsername() {
+        return this.username;
+    }
+
+    public int getLevel() {
+        return this.level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+        userDatabase.setLevel(username, level);
     }
 
     public Socket getSocket() {

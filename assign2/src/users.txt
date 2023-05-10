@@ -1,4 +1,8 @@
-user1:password1
-user2:password2
-user3:password3
-
+user1:password1:10
+user2:password2:1
+user7:pass7:1
+user5:pass5:0
+user6:pass6:5
+user:pass:0
+user3:password3:1
+user4:pass4:0

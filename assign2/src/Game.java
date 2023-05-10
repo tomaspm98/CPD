@@ -20,7 +20,7 @@ public class Game {
         initializeBoard(this.board);
     }
 
-    public void start() {
+    public Socket start() {
         System.out.println("Starting game with " + userSockets.size() + " players");
         printBoard(this.board);
 
@@ -61,12 +61,16 @@ public class Game {
 
         if (!gameWon) {
             sendGameResult("DRAW", "DRAW");
+            closeSockets();
+            return null;
         } else {
             sendGameResult(winnerSocket, "WIN");
             sendGameResult(loserSocket, "LOSE");
+            closeSockets();
+            return winnerSocket;
         }
 
-        closeSockets();
+        //closeSockets();
     }
 
     private static void initializeBoard(char[][] board) {
