@@ -12,6 +12,7 @@ public class Game {
     private static final int COLUMNS = 7;
     private static final char EMPTY = '.';
     private static final char[] PLAYERS = {'X', 'O'};
+    
 
     public Game(int players, List<Socket> userSockets) {
         this.userSockets = userSockets;
@@ -26,6 +27,8 @@ public class Game {
         int currentPlayerIndex = 0;
         int moveCount = 0;
         boolean gameWon = false;
+        Socket winnerSocket = null;
+        Socket loserSocket = null;
 
         while (!gameWon && moveCount < ROWS * COLUMNS) {
             char currentPlayer = PLAYERS[currentPlayerIndex];
@@ -45,7 +48,8 @@ public class Game {
 
                 gameWon = checkWin(this.board, row, column);
                 if (gameWon) {
-                    sendGameResult("WIN", "LOSE");
+                     winnerSocket = currentSocket;
+                     loserSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
                 } else {
                     currentPlayerIndex = (currentPlayerIndex + 1) % PLAYERS.length;
                 }
@@ -57,6 +61,9 @@ public class Game {
 
         if (!gameWon) {
             sendGameResult("DRAW", "DRAW");
+        } else {
+            sendGameResult(winnerSocket, "WIN");
+            sendGameResult(loserSocket, "LOSE");
         }
 
         closeSockets();
@@ -152,6 +159,10 @@ public class Game {
         sendMessageToPlayer(userSockets.get(0), result1);
         sendMessageToPlayer(userSockets.get(1), result2);
     }
+
+    private void sendGameResult(Socket socket, String result) {
+    sendMessageToPlayer(socket, result);
+}
 
     private void closeSockets() {
         for (Socket socket : userSockets) {

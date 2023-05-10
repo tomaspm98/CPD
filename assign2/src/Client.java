@@ -10,7 +10,7 @@ public class Client {
     private static final int SERVER_PORT = 12345;
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+       try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              Scanner scanner = new Scanner(System.in)) {
@@ -20,14 +20,16 @@ public class Client {
             System.out.print("Enter your password: ");
             String password = scanner.nextLine();
 
+            
             out.println(username);
             out.println(password);
-
+            
             String response = in.readLine();
-            if ("AUTH_SUCCESS".equals(response)) {
-                System.out.println("Authentication successful. Waiting for a game...");
-
-                while (true) {
+            
+            
+                if ("AUTH_SUCCESS".equals(response)) {
+                    System.out.println("Authentication successful. Waiting for a game...");
+                    while (true) {
                     String serverMessage = in.readLine();
                     if (serverMessage == null) break;
 
@@ -49,9 +51,19 @@ public class Client {
                         System.out.println("Invalid move. Try again.");
                     }
                 }
-            } else {
-                System.out.println("Authentication failed.");
-            }
+                } else if ("REGISTER?".equals(response)) {
+                    System.out.print("Authentication failed. Do you want to register a new account with these credentials? (yes/no): ");
+                    String registerResponse = scanner.nextLine();
+                    out.println(registerResponse);
+                } else if ("REGISTER_SUCCESS".equals(response)) {
+                    System.out.println("Registration successful.");
+                    
+                } else if ("REGISTER_FAIL".equals(response)) {
+                    System.out.println("Registration failed.");
+                } else {
+                    System.out.println("Authentication failed.");
+                }
+            
         } catch (IOException e) {
             System.err.println("Error in client: " + e.getMessage());
         }

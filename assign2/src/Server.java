@@ -20,6 +20,7 @@ public class Server {
                 Socket socket = serverSocket.accept();
                 User user = new User(socket);
 
+                //String authResult = user.authenticate();
                 if (user.authenticate()) {
                     waitingUsers.add(user);
                     if (waitingUsers.size() == PLAYERS_PER_GAME) {

@@ -18,20 +18,33 @@ public class User {
 
     public boolean authenticate() {
         try {
+            
             String username = in.readLine();
             String password = in.readLine();
-
-            // Add your authentication logic here. For example, you can  check the username and password against a database.
-            // This example assumes that the username and password must be equal for successful authentication.
-            if (userDatabase.authenticate(username, password)) {
+            
+            
+            if (!userDatabase.authenticate(username, password)) {
+                out.println("REGISTER?");
+                out.flush();
+                String response = in.readLine();
+                if ("yes".equalsIgnoreCase(response)) {
+                    if (userDatabase.register(username, password)) {
+                        out.println("REGISTER_SUCCESS");
+                        return false;
+                    } else {
+                        out.println("REGISTER_FAIL");
+                        return false;
+                    }
+                } else {
+                    out.println("AUTH_FAILED");
+                    return false;
+                }
+            } else {
                 out.println("AUTH_SUCCESS");
                 return true;
-            } else {
-                out.println("AUTH_FAILED");
-                return false;
             }
         } catch (IOException e) {
-            System.err.println("Error in user authentication: " + e.getMessage());
+            System.err.println("Error reading user credentials: " + e.getMessage());
             return false;
         }
     }
