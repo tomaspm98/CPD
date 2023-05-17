@@ -36,6 +36,8 @@ public class Game {
             int column = -1;
 
             try {
+                Socket otherSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                sendMessageToPlayer(otherSocket, "Opponent is playing...");
                 column = getColumnFromPlayer(currentSocket, currentPlayer);
             } catch (IOException e) {
                 System.err.println("Error getting column from player: " + e.getMessage());
@@ -70,7 +72,6 @@ public class Game {
             return winnerSocket;
         }
 
-        //closeSockets();
     }
 
     private static void initializeBoard(char[][] board) {
@@ -165,8 +166,8 @@ public class Game {
     }
 
     private void sendGameResult(Socket socket, String result) {
-    sendMessageToPlayer(socket, result);
-}
+        sendMessageToPlayer(socket, result);
+    }
 
     private void closeSockets() {
         for (Socket socket : userSockets) {

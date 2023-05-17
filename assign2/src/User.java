@@ -20,7 +20,7 @@ public class User {
         this.level = userDatabase.getLevel(username);
     }
 
-    public boolean authenticate() {
+    public int authenticate() {
         try {
             
             String password = in.readLine();
@@ -33,22 +33,23 @@ public class User {
                 if ("yes".equalsIgnoreCase(response)) {
                     if (userDatabase.register(username, password)) {
                         out.println("REGISTER_SUCCESS");
-                        return false;
+                        this.level = userDatabase.getLevel(username);
+                        return 1;
                     } else {
                         out.println("REGISTER_FAIL");
-                        return false;
+                        return -1;
                     }
                 } else {
                     out.println("AUTH_FAILED");
-                    return false;
+                    return -1;
                 }
             } else {
                 out.println("AUTH_SUCCESS");
-                return true;
+                return 1;
             }
         } catch (IOException e) {
             System.err.println("Error reading user credentials: " + e.getMessage());
-            return false;
+            return -1;
         }
     }
 
@@ -76,4 +77,20 @@ public class User {
             System.err.println("Error in closing user socket: " + e.getMessage());
         }
     }
+
+    public void sendMessage(String message) {
+    out.println(message);
+    out.flush();  // Important to ensure that the message is actually sent
+}
+
+/*    public int getScore() {
+    return userDatabase.getLevel(username);
+}
+*/
+    public void sendOpponentDetails(User opponent) {
+        sendMessage("Your opponent is " + opponent.getUsername() + " with " + opponent.getLevel() + " points.");
+}
+
+
+
 }

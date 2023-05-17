@@ -20,50 +20,51 @@ public class Client {
             System.out.print("Enter your password: ");
             String password = scanner.nextLine();
 
-            
             out.println(username);
             out.println(password);
-            
             String response = in.readLine();
-            
-            
-                if ("AUTH_SUCCESS".equals(response)) {
-                    System.out.println("Authentication successful. Waiting for a game...");
-                    while (true) {
-                    String serverMessage = in.readLine();
-                    if (serverMessage == null) break;
 
-                    if (serverMessage.startsWith("YOUR_TURN")) {
-                        char player = serverMessage.charAt(serverMessage.length() - 1);
-                        System.out.print("Your turn (Player " + player + "). Enter a column (0-6): ");
-                        int column = scanner.nextInt();
-                        out.println(column);
-                    } else if ("WIN".equals(serverMessage)) {
-                        System.out.println("You won!");
-                        break;
-                    } else if ("LOSE".equals(serverMessage)) {
-                        System.out.println("You lost!");
-                        break;
-                    } else if ("DRAW".equals(serverMessage)) {
-                        System.out.println("It's a draw!");
-                        break;
-                    } else if ("INVALID_MOVE".equals(serverMessage)) {
-                        System.out.println("Invalid move. Try again.");
-                    }
-                }
-                } else if ("REGISTER?".equals(response)) {
-                    System.out.print("Authentication failed. Do you want to register a new account with these credentials? (yes/no): ");
-                    String registerResponse = scanner.nextLine();
-                    out.println(registerResponse);
-                } else if ("REGISTER_SUCCESS".equals(response)) {
-                    System.out.println("Registration successful.");
-                    
+            if ("AUTH_SUCCESS".equals(response)) {
+                System.out.println("Authentication successful. Waiting for a game...");
+            } else if ("REGISTER?".equals(response)) {
+                System.out.print("Authentication failed. Do you want to register a new account with these credentials? (yes/no): ");
+                String registerResponse = scanner.nextLine();
+                out.println(registerResponse);
+                response = in.readLine();
+                if ("REGISTER_SUCCESS".equals(response)) {
+                    System.out.println("Registration successful. Waiting for a game...");
                 } else if ("REGISTER_FAIL".equals(response)) {
-                    System.out.println("Registration failed.");
+                    System.out.println("Registration failed. That username already exists!");
                 } else {
                     System.out.println("Authentication failed.");
                 }
-            
+            }
+
+            while (true) {
+                String serverMessage = in.readLine();
+                if (serverMessage == null) break;
+
+                if (serverMessage.startsWith("YOUR_TURN")) {
+                    char player = serverMessage.charAt(serverMessage.length() - 1);
+                    System.out.print("Your turn (Player " + player + "). Enter a column (0-6): ");
+                    int column = scanner.nextInt();
+                    out.println(column);
+                } else if ("WIN".equals(serverMessage)) {
+                    System.out.println("You won! +5 points");
+                    break;
+                } else if ("LOSE".equals(serverMessage)) {
+                    System.out.println("You lost! +1 point");
+                    break;
+                } else if ("DRAW".equals(serverMessage)) {
+                    System.out.println("It's a draw! +3");
+                    break;
+                } else if ("INVALID_MOVE".equals(serverMessage)) {
+                    System.out.println("Invalid move. Try again.");
+                }
+                else {
+                    System.out.println(serverMessage);
+                }
+            }
         } catch (IOException e) {
             System.err.println("Error in client: " + e.getMessage());
         }
