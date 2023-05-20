@@ -1,13 +1,13 @@
-user1:password1:128
-user2:password2:123
+user1:password1:39
+user2:password2:38
 user10:ola:0
 tomasmac:zeca:0
 user45:ola123:0
 user50000:ola12345:0
 user7:pass7:23
 user5:pass5:0
-user6:pass6:12
-user3:password3:15
+user6:pass6:11
+user3:password3:10
 user4:pass4:18
 user70:ola:6
 zeca:ola:0

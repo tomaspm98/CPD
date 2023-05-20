@@ -10,75 +10,63 @@ public class Client {
     private static final int SERVER_PORT = 12345;
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        String playAgainResponse = "yes";
+       try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             Scanner scanner = new Scanner(System.in)) {
 
-        while ("yes".equalsIgnoreCase(playAgainResponse)) {
-            try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+            System.out.print("Enter your username: ");
+            String username = scanner.nextLine();
+            System.out.print("Enter your password: ");
+            String password = scanner.nextLine();
 
-                System.out.print("Enter your username: ");
-                String username = scanner.nextLine();
-                System.out.print("Enter your password: ");
-                String password = scanner.nextLine();
+            out.println(username);
+            out.println(password);
+            String response = in.readLine();
 
-                out.println(username);
-                out.println(password);
-                String response = in.readLine();
-
-                if ("AUTH_SUCCESS".equals(response)) {
-                    System.out.println("Authentication successful. Waiting for a game...");
-                } else if ("REGISTER?".equals(response)) {
-                    System.out.print("Authentication failed. Do you want to register a new account with these credentials? (yes/no): ");
-                    String registerResponse = scanner.nextLine();
-                    out.println(registerResponse);
-                    response = in.readLine();
-                    if ("REGISTER_SUCCESS".equals(response)) {
-                        System.out.println("Registration successful. Waiting for a game...");
-                    } else if ("REGISTER_FAIL".equals(response)) {
-                        System.out.println("Registration failed. That username already exists!");
-                    } else {
-                        System.out.println("Authentication failed.");
-                    }
+            if ("AUTH_SUCCESS".equals(response)) {
+                System.out.println("Authentication successful. Waiting for a game...");
+            } else if ("REGISTER?".equals(response)) {
+                System.out.print("Authentication failed. Do you want to register a new account with these credentials? (yes/no): ");
+                String registerResponse = scanner.nextLine();
+                out.println(registerResponse);
+                response = in.readLine();
+                if ("REGISTER_SUCCESS".equals(response)) {
+                    System.out.println("Registration successful. Waiting for a game...");
+                } else if ("REGISTER_FAIL".equals(response)) {
+                    System.out.println("Registration failed. That username already exists!");
+                } else {
+                    System.out.println("Authentication failed.");
                 }
-
-                while (true) {
-                    String serverMessage = in.readLine();
-                    if (serverMessage == null) break;
-
-                    if (serverMessage.startsWith("YOUR_TURN")) {
-                        char player = serverMessage.charAt(serverMessage.length() - 1);
-                        System.out.print("Your turn (Player " + player + "). Enter a column (0-6): ");
-                        int column = scanner.nextInt();
-                        scanner.nextLine();
-                        out.println(column);
-                    } else if ("WIN".equals(serverMessage)) {
-                        System.out.println("You won! +5 points");
-                    } else if ("LOSE".equals(serverMessage)) {
-                        System.out.println("You lost! +1 point");
-                    } else if ("DRAW".equals(serverMessage)) {
-                        System.out.println("It's a draw! +3 points");
-                    } else if ("INVALID_MOVE".equals(serverMessage)) {
-                        System.out.println("Invalid move. Try again.");
-                    } else {
-                        System.out.println(serverMessage);
-                        if ("Do you want to play another game? (yes/no)".equals(serverMessage)) {
-                            playAgainResponse = scanner.nextLine();
-                            out.println(playAgainResponse);
-                            if ("no".equalsIgnoreCase(playAgainResponse)) {
-                                break;
-                            }
-                            if ("yes".equalsIgnoreCase(playAgainResponse)) {
-                                break;
-                        }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                System.err.println("Error in client: " + e.getMessage());
-                break; // Exit the loop and terminate the program if there's an error
             }
+
+            while (true) {
+                String serverMessage = in.readLine();
+                if (serverMessage == null) break;
+
+                if (serverMessage.startsWith("YOUR_TURN")) {
+                    char player = serverMessage.charAt(serverMessage.length() - 1);
+                    System.out.print("Your turn (Player " + player + "). Enter a column (0-6): ");
+                    int column = scanner.nextInt();
+                    out.println(column);
+                } else if ("WIN".equals(serverMessage)) {
+                    System.out.println("You won! +5 points");
+                    break;
+                } else if ("LOSE".equals(serverMessage)) {
+                    System.out.println("You lost! +1 point");
+                    break;
+                } else if ("DRAW".equals(serverMessage)) {
+                    System.out.println("It's a draw! +3");
+                    break;
+                } else if ("INVALID_MOVE".equals(serverMessage)) {
+                    System.out.println("Invalid move. Try again.");
+                }
+                else {
+                    System.out.println(serverMessage);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error in client: " + e.getMessage());
         }
     }
 }

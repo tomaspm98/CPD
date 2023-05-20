@@ -10,7 +10,6 @@ public class User {
     private BufferedReader in;
     private String username;
     private int level;
-    private boolean playAgain;
     private static final UserDatabase userDatabase = new UserDatabase();
 
     public User(Socket socket) throws IOException {
@@ -91,14 +90,6 @@ public class User {
     public void sendOpponentDetails(User opponent) {
         sendMessage("Your opponent is " + opponent.getUsername() + " with " + opponent.getLevel() + " points.");
 }
-
-    public boolean isPlayAgain() {
-        return playAgain;
-    }
-
-    public void setPlayAgain(boolean playAgain) {
-        this.playAgain = playAgain;
-    }   
 
 
 

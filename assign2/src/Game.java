@@ -62,31 +62,17 @@ public class Game {
         }
 
         if (!gameWon) {
-        sendGameResult("DRAW", "DRAW");
-    } else {
-        sendGameResult(winnerSocket, "WIN");
-        sendGameResult(loserSocket, "LOSE");
-    }
+            sendGameResult("DRAW", "DRAW");
+            closeSockets();
+            return null;
+        } else {
+            sendGameResult(winnerSocket, "WIN");
+            sendGameResult(loserSocket, "LOSE");
+            closeSockets();
+            return winnerSocket;
+        }
 
-    boolean winnerWantsToPlayAgain = false;
-    boolean loserWantsToPlayAgain = false;
-    
-    if (winnerSocket != null) {
-        winnerWantsToPlayAgain = askPlayAgain(winnerSocket);
     }
-    if (loserSocket != null) {
-        loserWantsToPlayAgain = askPlayAgain(loserSocket);
-    }
-    
-    if (!winnerWantsToPlayAgain) {
-        userSockets.remove(winnerSocket);
-    }
-    if (!loserWantsToPlayAgain) {
-        userSockets.remove(loserSocket);
-    }
-    
-    return winnerWantsToPlayAgain || loserWantsToPlayAgain ? winnerSocket : null;
-}
 
     private static void initializeBoard(char[][] board) {
         for (int row = 0; row < ROWS; row++) {
@@ -167,18 +153,6 @@ public class Game {
         }
     }
 
-    private boolean askPlayAgain(Socket socket) {
-    try {
-        sendMessageToPlayer(socket, "Do you want to play another game? (yes/no)");
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        String answer = in.readLine();
-        return "yes".equalsIgnoreCase(answer);
-    } catch (IOException e) {
-        System.err.println("Error getting response from player: " + e.getMessage());
-        return false;
-    }
-}
-
     private int getColumnFromPlayer(Socket socket, char player) throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -204,6 +178,4 @@ public class Game {
             }
         }
     }
-
-    
 }
