@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class User {
@@ -22,10 +23,9 @@ public class User {
 
     public boolean authenticate() {
         try {
-            
+
             String password = in.readLine();
-            
-            
+
             if (!userDatabase.authenticate(username, password)) {
                 out.println("REGISTER?");
                 out.flush();
@@ -67,6 +67,19 @@ public class User {
 
     public Socket getSocket() {
         return socket;
+    }
+
+    public void setSocketPort(int port) {
+        try {
+            this.socket.bind(new InetSocketAddress(port));
+            this.socket.connect(new InetSocketAddress("localhost", 12345));
+        } catch (IOException e) {
+            System.err.println("Error in setting user socket port: " + e.getMessage());
+        }
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 
     public void close() {

@@ -6,16 +6,19 @@ import java.net.Socket;
 import java.util.List;
 
 public class Game {
-    private List<Socket> userSockets;
+    private static List<Socket> userSockets;
+    private static List<String> usernames;
     private char[][] board;
     private static final int ROWS = 6;
     private static final int COLUMNS = 7;
     private static final char EMPTY = '.';
-    private static final char[] PLAYERS = {'X', 'O'};
-    
+    private static final char[] PLAYERS = { 'X', 'O' };
+    private Socket winnerSocket;
+    private Socket loserSocket;
 
-    public Game(int players, List<Socket> userSockets) {
+    public Game(int players, List<Socket> userSockets, List<String> usernames) {
         this.userSockets = userSockets;
+        this.usernames = usernames;
         this.board = new char[ROWS][COLUMNS];
         initializeBoard(this.board);
     }
@@ -27,8 +30,6 @@ public class Game {
         int currentPlayerIndex = 0;
         int moveCount = 0;
         boolean gameWon = false;
-        Socket winnerSocket = null;
-        Socket loserSocket = null;
 
         while (!gameWon && moveCount < ROWS * COLUMNS) {
             char currentPlayer = PLAYERS[currentPlayerIndex];
@@ -38,8 +39,10 @@ public class Game {
             try {
                 column = getColumnFromPlayer(currentSocket, currentPlayer);
             } catch (IOException e) {
-                System.err.println("Error getting column from player: " + e.getMessage());
-                break;
+                this.winnerSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                sendGameResult(this.winnerSocket, "OPPONENT_DISCONNECTED");
+                closeSockets();
+                return this.winnerSocket;
             }
 
             if (column >= 0 && column < COLUMNS && board[0][column] == EMPTY) {
@@ -48,8 +51,8 @@ public class Game {
 
                 gameWon = checkWin(this.board, row, column);
                 if (gameWon) {
-                     winnerSocket = currentSocket;
-                     loserSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                    this.winnerSocket = currentSocket;
+                    this.loserSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
                 } else {
                     currentPlayerIndex = (currentPlayerIndex + 1) % PLAYERS.length;
                 }
@@ -64,13 +67,11 @@ public class Game {
             closeSockets();
             return null;
         } else {
-            sendGameResult(winnerSocket, "WIN");
-            sendGameResult(loserSocket, "LOSE");
+            sendGameResult(this.winnerSocket, "WIN");
+            sendGameResult(this.loserSocket, "LOSE");
             closeSockets();
             return winnerSocket;
         }
-
-        //closeSockets();
     }
 
     private static void initializeBoard(char[][] board) {
@@ -93,7 +94,8 @@ public class Game {
 
     private static int makeMove(char[][] board, int column, char player) {
         int row;
-        for (row = ROWS - 1; row >= 0 && board[row][column] != EMPTY; row--) ;
+        for (row = ROWS - 1; row >= 0 && board[row][column] != EMPTY; row--)
+            ;
         board[row][column] = player;
         return row;
     }
@@ -105,14 +107,16 @@ public class Game {
         int count = 0;
         for (int c = 0; c < COLUMNS; c++) {
             count = (board[row][c] == player) ? count + 1 : 0;
-            if (count >= 4) return true;
+            if (count >= 4)
+                return true;
         }
 
         // Check vertical
         count = 0;
         for (int r = 0; r < ROWS; r++) {
             count = (board[r][col] == player) ? count + 1 : 0;
-            if (count >= 4) return true;
+            if (count >= 4)
+                return true;
         }
 
         // Check diagonal: top-left to bottom-right
@@ -124,7 +128,8 @@ public class Game {
             int c = startCol + i;
             if (r < ROWS && c < COLUMNS) {
                 count = (board[r][c] == player) ? count + 1 : 0;
-                if (count >= 4) return true;
+                if (count >= 4)
+                    return true;
             }
         }
         // Check diagonal: bottom-left to top-right
@@ -136,7 +141,8 @@ public class Game {
             int c = startCol + i;
             if (r >= 0 && c < COLUMNS) {
                 count = (board[r][c] == player) ? count + 1 : 0;
-                if (count >= 4) return true;
+                if (count >= 4)
+                    return true;
             }
         }
 
@@ -165,8 +171,8 @@ public class Game {
     }
 
     private void sendGameResult(Socket socket, String result) {
-    sendMessageToPlayer(socket, result);
-}
+        sendMessageToPlayer(socket, result);
+    }
 
     private void closeSockets() {
         for (Socket socket : userSockets) {
@@ -176,5 +182,17 @@ public class Game {
                 System.err.println("Error closing socket: " + e.getMessage());
             }
         }
+    }
+
+    public static boolean containsUser(String user) {
+        return usernames.contains(user);
+    }
+
+    public static void updateUserSocket(String user, Socket socket) {
+        userSockets.set(usernames.indexOf(user), socket);
+    }
+
+    public Socket getWinnerSocket() {
+        return this.winnerSocket;
     }
 }
