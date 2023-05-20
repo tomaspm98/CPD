@@ -11,6 +11,7 @@ public class User {
     private String username;
     private int level;
     private boolean playAgain;
+    private boolean isLoggedIn;
     private static final UserDatabase userDatabase = new UserDatabase();
 
     public User(Socket socket) throws IOException {
@@ -19,9 +20,11 @@ public class User {
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         this.username = in.readLine();
         this.level = userDatabase.getLevel(username);
+        this.isLoggedIn = false;
     }
 
     public int authenticate() {
+      if (!isLoggedIn){  
         try {
             
             String password = in.readLine();
@@ -35,6 +38,7 @@ public class User {
                     if (userDatabase.register(username, password)) {
                         out.println("REGISTER_SUCCESS");
                         this.level = userDatabase.getLevel(username);
+                        isLoggedIn = true;
                         return 1;
                     } else {
                         out.println("REGISTER_FAIL");
@@ -46,12 +50,17 @@ public class User {
                 }
             } else {
                 out.println("AUTH_SUCCESS");
+                isLoggedIn = true;
                 return 1;
             }
         } catch (IOException e) {
             System.err.println("Error reading user credentials: " + e.getMessage());
             return -1;
         }
+    }
+    else {
+        return 1;
+    }
     }
 
     public String getUsername() {
@@ -84,10 +93,6 @@ public class User {
     out.flush();  // Important to ensure that the message is actually sent
 }
 
-/*    public int getScore() {
-    return userDatabase.getLevel(username);
-}
-*/
     public void sendOpponentDetails(User opponent) {
         sendMessage("Your opponent is " + opponent.getUsername() + " with " + opponent.getLevel() + " points.");
 }

@@ -1,7 +1,7 @@
-user1:password1:128
-user2:password2:123
-user10:ola:0
-tomasmac:zeca:0
+user1:password1:78
+user2:password2:74
+user10:ola:1
+tomasmac:zeca:5
 user45:ola123:0
 user50000:ola12345:0
 user7:pass7:23
