@@ -43,18 +43,18 @@ public class Client {
                         out.println(column);
                     } else if ("WIN".equals(serverMessage)) {
                         System.out.println("You won!");
-                        break;
-                    } else if ("OPPONENT_DISCONNECTED".equals(serverMessage)) {
-                        System.out.println("Your opponent disconnected, you won!");
-                        break;
                     } else if ("LOSE".equals(serverMessage)) {
                         System.out.println("You lost!");
-                        break;
                     } else if ("DRAW".equals(serverMessage)) {
                         System.out.println("It's a draw!");
                         break;
                     } else if ("INVALID_MOVE".equals(serverMessage)) {
                         System.out.println("Invalid move. Try again.");
+                    } else if ("OPPONENT_DISCONNECTED".equals(serverMessage)) {
+                        System.out.println("Your opponent disconnected, you won!");
+                        break;
+                    } else if ("PLAY_AGAIN".equals(serverMessage)) {
+                        System.out.print("Playing again, returned to waiting queue.\n");
                     }
                 }
             } else if ("REGISTER?".equals(response)) {

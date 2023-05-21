@@ -13,8 +13,9 @@ public class Game {
     private static final int COLUMNS = 7;
     private static final char EMPTY = '.';
     private static final char[] PLAYERS = { 'X', 'O' };
-    private Socket winnerSocket;
+    private Socket winnerSocket = null;
     private Socket loserSocket;
+    private boolean isFinished = false;
 
     public Game(int players, List<Socket> userSockets, List<String> usernames) {
         this.userSockets = userSockets;
@@ -24,7 +25,7 @@ public class Game {
     }
 
     public Socket start() {
-        System.out.println("Starting game with " + userSockets.size() + " players");
+        System.out.println("Starting game with players " + usernames.get(0) + " and " + usernames.get(1) + ".");
         printBoard(this.board);
 
         int currentPlayerIndex = 0;
@@ -40,6 +41,8 @@ public class Game {
                 column = getColumnFromPlayer(currentSocket, currentPlayer);
             } catch (IOException e) {
                 this.winnerSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                this.loserSocket = currentSocket;
+                this.isFinished = true;
                 sendGameResult(this.winnerSocket, "OPPONENT_DISCONNECTED");
                 closeSockets();
                 return this.winnerSocket;
@@ -53,6 +56,7 @@ public class Game {
                 if (gameWon) {
                     this.winnerSocket = currentSocket;
                     this.loserSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                    this.isFinished = true;
                 } else {
                     currentPlayerIndex = (currentPlayerIndex + 1) % PLAYERS.length;
                 }
@@ -62,14 +66,18 @@ public class Game {
             }
         }
 
+        this.isFinished = true;
+
         if (!gameWon) {
             sendGameResult("DRAW", "DRAW");
-            closeSockets();
+            // closeSockets();
+            sendGameResult("Playing again, returned to waiting queue", "Playing again, returned to waiting queue");
             return null;
         } else {
             sendGameResult(this.winnerSocket, "WIN");
             sendGameResult(this.loserSocket, "LOSE");
-            closeSockets();
+            // closeSockets();
+            sendGameResult("PLAY_AGAIN", "PLAY_AGAIN");
             return winnerSocket;
         }
     }
@@ -83,6 +91,7 @@ public class Game {
     }
 
     private static void printBoard(char[][] board) {
+        System.out.println("board for players:" + usernames.get(0) + " and " + usernames.get(1) + ".");
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLUMNS; col++) {
                 System.out.print(board[row][col] + " ");
@@ -194,5 +203,9 @@ public class Game {
 
     public Socket getWinnerSocket() {
         return this.winnerSocket;
+    }
+
+    public boolean isGameFinished() {
+        return this.isFinished;
     }
 }
