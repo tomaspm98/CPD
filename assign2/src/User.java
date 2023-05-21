@@ -79,15 +79,6 @@ public class User {
         return socket;
     }
 
-    public void setSocketPort(int port) {
-        try {
-            this.socket.bind(new InetSocketAddress(port));
-            this.socket.connect(new InetSocketAddress("localhost", 12345));
-        } catch (IOException e) {
-            System.err.println("Error in setting user socket port: " + e.getMessage());
-        }
-    }
-
     public void setSocket(Socket socket) {
         this.socket = socket;
     }

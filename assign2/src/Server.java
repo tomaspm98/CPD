@@ -53,6 +53,7 @@ public class Server {
                     OngoingGames currGame = iterator.next();
                     if (currGame.getGameResult().isDone() || currGame.getGame().isGameFinished()) {
                         try {
+                            System.out.println("Game ended");
                             Socket winnerSocket = currGame.getGameResult().get();
                             if (currGame.getRanked()) {
                                 if (winnerSocket == null) {
@@ -96,19 +97,21 @@ public class Server {
 
                         if (matchmaking == 1) {
                             for (User secondUser : waitingUsers.keySet()) {
-                                players.add(secondUser);
-                                if (players.size() == PLAYERS_PER_GAME) {
-                                    // System.out.println("waitingUsers before: " + waitingUsers);
-                                    waitingUsers.remove(firstUser);
-                                    waitingUsers.remove(secondUser);
-                                    // System.out.println("waitingUsers after: " + waitingUsers);
-                                    waitingUsersSize = waitingUsers.size();
-                                    System.out.println("\n\ningameplayers before: " + ingamePlayers);
-                                    ingamePlayers.add(firstUser);
-                                    ingamePlayers.add(secondUser);
-                                    System.out.println("ingameplayers after: " + ingamePlayers + "\n\n");
-                                    startGame(players, gameExecutor, waitingUsers, false);
-                                    break;
+                                if (secondUser != firstUser) {
+                                    players.add(secondUser);
+                                    if (players.size() == PLAYERS_PER_GAME) {
+                                        // System.out.println("waitingUsers before: " + waitingUsers);
+                                        waitingUsers.remove(firstUser);
+                                        waitingUsers.remove(secondUser);
+                                        // System.out.println("waitingUsers after: " + waitingUsers);
+                                        waitingUsersSize = waitingUsers.size();
+                                        System.out.println("\n\ningameplayers before: " + ingamePlayers);
+                                        ingamePlayers.add(firstUser);
+                                        ingamePlayers.add(secondUser);
+                                        System.out.println("ingameplayers after: " + ingamePlayers + "\n\n");
+                                        startGame(players, gameExecutor, waitingUsers, false);
+                                        break;
+                                    }
                                 }
                             }
                         } else if (matchmaking == 2) {
