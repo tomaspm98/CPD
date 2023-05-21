@@ -6,6 +6,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 
 public class Server {
     private static final int PORT = 12345;
@@ -22,8 +25,7 @@ public class Server {
     private static final CompletionService<Socket> completionService = new ExecutorCompletionService<>(gameExecutor);
 
     public static void main(String[] args) {
-        ExecutorService gameExecutor = Executors.newFixedThreadPool(MAX_GAMES);
-        List<User> waitingUsers = new ArrayList<>();
+        Map<User, Long> waitingUsers = new HashMap<>();
         int waitingUsersSize = 0;
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -71,7 +73,7 @@ public class Server {
                             ongoingGames.remove(currGame);
                             System.out.println("\n\n------------ Game ended ---------------\n\n");
                             for (User player : currGame.getPlayers()) {
-                                waitingUsers.add(player);
+                                waitingUsers.put(player, System.currentTimeMillis());
                             }
                             ingamePlayers.removeAll(currGame.getPlayers());
                         }
@@ -86,14 +88,12 @@ public class Server {
                 }
 
                 if (waitingUsers.size() >= PLAYERS_PER_GAME) {
-                    for (int i = 0; i < waitingUsers.size(); i++) {
-                        User firstUser = waitingUsers.get(i);
+                    for (User firstUser : waitingUsers.keySet()) {
                         List<User> players = new ArrayList<>();
                         players.add(firstUser);
 
                         if (matchmaking == 1) {
-                            for (int j = i + 1; j < waitingUsers.size(); j++) {
-                                User secondUser = waitingUsers.get(j);
+                            for (User secondUser : waitingUsers.keySet()) {
                                 players.add(secondUser);
                                 if (players.size() == PLAYERS_PER_GAME) {
                                     // System.out.println("waitingUsers before: " + waitingUsers);
@@ -110,30 +110,57 @@ public class Server {
                                 }
                             }
                         } else if (matchmaking == 2) {
-                            for (int j = i + 1; j < waitingUsers.size(); j++) {
-                                User secondUser = waitingUsers.get(j);
-                                if (Math.abs(
-                                        firstUser.getLevel() - secondUser.getLevel()) <= MAX_LEVEL_DIFFERENCE) {
-                                    players.add(secondUser);
-                                    if (players.size() == PLAYERS_PER_GAME) {
-                                        waitingUsers.remove(firstUser);
-                                        waitingUsers.remove(secondUser);
-                                        waitingUsersSize = waitingUsers.size();
-                                        ingamePlayers.add(firstUser);
-                                        ingamePlayers.add(secondUser);
-                                        startGame(players, gameExecutor, waitingUsers, true);
-                                        break;
+                            for (User secondUser : waitingUsers.keySet()) {
+                                if (firstUser != secondUser) {
+                                    long waitTime = System.currentTimeMillis()
+                                            - Math.max(waitingUsers.get(firstUser), waitingUsers.get(secondUser));
+                                    int currentMaxLevelDifference = MAX_LEVEL_DIFFERENCE + (int) (waitTime / 10000) * 2;
+                                    if (Math.abs(
+                                            firstUser.getLevel()
+                                                    - secondUser.getLevel()) <= currentMaxLevelDifference) {
+                                        players.add(secondUser);
+                                        if (players.size() == PLAYERS_PER_GAME) {
+                                            for (User player : players) {
+                                                player.sendMessage("You are now entering a game. Good luck!");
+                                            }
+
+                                            try {
+                                                Thread.sleep(2000); // Wait for 2 seconds before starting the game
+                                            } catch (InterruptedException e) {
+                                                System.err.println("Error in sleep: " + e.getMessage());
+                                            }
+
+                                            for (User player : players) {
+                                                for (User opponent : players) {
+                                                    if (!player.equals(opponent)) {
+                                                        player.sendOpponentDetails(opponent);
+                                                    }
+                                                }
+                                            }
+
+                                            try {
+                                                Thread.sleep(2000); // Wait for 2 seconds before starting the game
+                                            } catch (InterruptedException e) {
+                                                System.err.println("Error in sleep: " + e.getMessage());
+                                            }
+
+                                            waitingUsers.remove(firstUser);
+                                            waitingUsers.remove(secondUser);
+                                            waitingUsersSize = waitingUsers.size();
+                                            ingamePlayers.add(firstUser);
+                                            ingamePlayers.add(secondUser);
+                                            startGame(players, gameExecutor, waitingUsers, true);
+                                            break;
+                                        }
                                     }
                                 }
                             }
-
-                            if (players.size() == PLAYERS_PER_GAME) {
-                                break;
-                            }
+                        }
+                        if (players.size() == PLAYERS_PER_GAME) {
+                            break;
                         }
                     }
                 }
-
                 Socket socket = serverSocket.accept();
                 User user = new User(socket);
 
@@ -156,9 +183,9 @@ public class Server {
                 }
 
                 if (user.authenticate() && !ingameUserFound) {
-                    System.out.println("\n\nwaitingUsers: " + waitingUsers + "\n\n");
+                    System.out.println("\n\nwaitingUsers: " + waitingUsers.keySet() + "\n\n");
                     boolean userFound = false;
-                    for (User waitingUser : waitingUsers) { // fault tolerance
+                    for (User waitingUser : waitingUsers.keySet()) { // fault tolerance
                         if (waitingUser.getUsername().equals(user.getUsername())) {
                             userFound = true;
                             waitingUser.close();
@@ -167,7 +194,7 @@ public class Server {
                         }
                     }
                     if (!userFound) {
-                        waitingUsers.add(user);
+                        waitingUsers.put(user, System.currentTimeMillis());
                     }
 
                     System.out.println("User " + user.getUsername() + " connected from " + socket.getInetAddress()
@@ -175,15 +202,22 @@ public class Server {
                 } else {
                     user.close();
                 }
+                try {
+                    Thread.sleep(1000); // Wait for 1 second before next check
+                } catch (InterruptedException e) {
+                    System.err.println("Error in sleep: " + e.getMessage());
+                }
             }
-        } catch (IOException e) {
+        } catch (
+
+        IOException e) {
             System.err.println("Error in server: " + e.getMessage());
         } finally {
             gameExecutor.shutdown();
         }
     }
 
-    private static void startGame(List<User> players, ExecutorService gameExecutor, List<User> waitingUsers,
+    private static void startGame(List<User> players, ExecutorService gameExecutor, Map<User, Long> waitingUsers,
             Boolean ranked) {
         List<Socket> userSockets = new ArrayList<>();
         for (User player : players) {
@@ -212,6 +246,27 @@ public class Server {
 
         } catch (Exception e) {
             System.err.println("Error getting game result: " + e.getMessage());
+        }
+    }
+
+    private static void askForAnotherGame(List<User> players, Map<User, Long> waitingUsers) {
+        for (User player : players) {
+            try {
+                PrintWriter out = new PrintWriter(player.getSocket().getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(player.getSocket().getInputStream()));
+
+                out.println("Do you want to play another game? (yes/no)");
+                out.flush();
+
+                String response = in.readLine();
+                if (response != null && response.equalsIgnoreCase("yes")) {
+                    waitingUsers.put(player, System.currentTimeMillis());
+                } else {
+                    player.getSocket().close();
+                }
+            } catch (IOException e) {
+                System.err.println("Error in askForAnotherGame: " + e.getMessage());
+            }
         }
     }
 }

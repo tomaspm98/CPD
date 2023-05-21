@@ -38,6 +38,8 @@ public class Game {
             int column = -1;
 
             try {
+                Socket otherSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
+                sendMessageToPlayer(otherSocket, "Opponent is playing...");
                 column = getColumnFromPlayer(currentSocket, currentPlayer);
             } catch (IOException e) {
                 this.winnerSocket = userSockets.get((currentPlayerIndex + 1) % PLAYERS.length);
@@ -164,6 +166,18 @@ public class Game {
             out.println(message);
         } catch (IOException e) {
             System.err.println("Error sending message to player: " + e.getMessage());
+        }
+    }
+
+    private boolean askPlayAgain(Socket socket) {
+        try {
+            sendMessageToPlayer(socket, "Do you want to play another game? (yes/no)");
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String answer = in.readLine();
+            return "yes".equalsIgnoreCase(answer);
+        } catch (IOException e) {
+            System.err.println("Error getting response from player: " + e.getMessage());
+            return false;
         }
     }
 
