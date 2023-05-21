@@ -1,9 +1,9 @@
 user1:pass1:18
 user2:pass2:27
-user7:pass7:9
-user8:pass8:0
-user5:pass5:5
-user6:pass6:5
-user:pass:9
-user3:pass3:15
-user4:pass4:7
+user7:pass7:15
+user8:pass8:1
+user5:pass5:21
+user6:pass6:15
+user:pass:10
+user3:pass3:16
+user4:pass4:8

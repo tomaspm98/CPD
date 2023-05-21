@@ -27,10 +27,10 @@ public class Server {
     public static void main(String[] args) {
         Map<User, Long> waitingUsers = new HashMap<>();
         int waitingUsersSize = 0;
+        int matchmaking = 1;
 
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             Scanner scanner = new Scanner(System.in);
-            int matchmaking;
             while (true) {
                 System.out.print(
                         "There are two options for the matchmaking: \n1. Simple - Rank is irrelevant \n2. Ranked - Can only match with players of similar rank \nPlease enter your choice: ");
@@ -48,7 +48,9 @@ public class Server {
             scanner.close();
             System.out.println("Server is running...");
             while (true) {
-                for (OngoingGames currGame : ongoingGames) {
+                Iterator<OngoingGames> iterator = ongoingGames.iterator();
+                while (iterator.hasNext()) {
+                    OngoingGames currGame = iterator.next();
                     if (currGame.getGameResult().isDone() || currGame.getGame().isGameFinished()) {
                         try {
                             Socket winnerSocket = currGame.getGameResult().get();
@@ -70,7 +72,7 @@ public class Server {
                         } catch (InterruptedException | ExecutionException e) {
                             e.printStackTrace();
                         } finally {
-                            ongoingGames.remove(currGame);
+                            iterator.remove();
                             System.out.println("\n\n------------ Game ended ---------------\n\n");
                             for (User player : currGame.getPlayers()) {
                                 waitingUsers.put(player, System.currentTimeMillis());
@@ -229,23 +231,12 @@ public class Server {
             usernames.add(player.getUsername());
         }
         try {
-            // lock.lock();
-
-            try {
-                Game game = new Game(PLAYERS_PER_GAME, userSockets, usernames);
-
-                Future<Socket> gameResult = gameExecutor.submit(game::start);
-                // gameReadyCondition.signal();
-                OngoingGames currentGame = new OngoingGames(game, players, gameResult, ranked);
-                ongoingGames.add(currentGame);
-            } catch (Exception e) {
-                Thread.currentThread().interrupt();
-            } finally {
-                // lock.unlock();
-            }
-
+            Game game = new Game(PLAYERS_PER_GAME, userSockets, usernames);
+            Future<Socket> gameResult = gameExecutor.submit(game::start);
+            OngoingGames currentGame = new OngoingGames(game, players, gameResult, ranked);
+            ongoingGames.add(currentGame);
         } catch (Exception e) {
-            System.err.println("Error getting game result: " + e.getMessage());
+            Thread.currentThread().interrupt();
         }
     }
 
